@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Westend vernetzt - Abstimmung</title>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyA5uKZiAi-xBkPxqNRIAohT5aTgI1L3mxs",
+  authDomain: "abstimmung---wv-aktionsreihe.firebaseapp.com",
+  databaseURL: "https://abstimmung---wv-aktionsreihe-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "abstimmung---wv-aktionsreihe",
+  storageBucket: "abstimmung---wv-aktionsreihe.firebasestorage.app",
+  messagingSenderId: "25982286784",
+  appId: "1:25982286784:web:2e3934367e72ac8a11e625"
+});
+const db = firebase.database();
+</script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:#f5f5f5;font-family:'DM Sans',sans-serif;font-weight:300;color:#111;min-height:100vh}
+.header{background:#fff;border-bottom:2px solid #111;padding:18px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.logo{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+.badge{border:1.5px solid #ccc;border-radius:20px;padding:5px 13px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#888}
+.badge.active{border-color:#111;color:#111;background:#f5f5f5}
+.center{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 65px);padding:40px 20px}
+.card{background:#fff;border:1.5px solid #e0e0e0;border-radius:16px;padding:36px;width:100%;max-width:520px;box-shadow:0 2px 16px rgba(0,0,0,.06)}
+.card-wide{max-width:800px}
+h1{font-family:'Syne',sans-serif;font-size:clamp(26px,5vw,40px);font-weight:800;line-height:1.1;margin-bottom:8px}
+h2{font-family:'Syne',sans-serif;font-size:21px;font-weight:800;margin-bottom:16px}
+.proj-sub{font-size:14px;color:#555;font-style:italic;margin-bottom:24px;line-height:1.5;border-left:3px solid #111;padding-left:12px}
+.sub{color:#666;font-size:14px;line-height:1.6;margin-bottom:28px}
+label{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#888;margin-bottom:7px;display:block}
+input[type=text],input[type=password],textarea{width:100%;background:#fafafa;border:1.5px solid #ddd;border-radius:10px;padding:12px 15px;color:#111;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:300;outline:none;transition:border-color .2s;margin-bottom:14px;display:block}
+input:focus,textarea:focus{border-color:#111}
+textarea{min-height:170px;resize:vertical}
+.btn{display:block;width:100%;padding:13px 18px;border-radius:10px;border:none;cursor:pointer;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;transition:all .15s;text-align:center}
+.btn-p{background:#111;color:#fff}
+.btn-p:hover:not(:disabled){background:#333;transform:translateY(-1px)}
+.btn-p:disabled{background:#ccc;color:#999;cursor:not-allowed}
+.btn-g{background:transparent;border:1.5px solid #ddd;color:#666}
+.btn-g:hover{border-color:#111;color:#111}
+.btn-d{background:transparent;border:1.5px solid #c00;color:#c00}
+.btn-d:hover{background:#fff0f0}
+.btn-sm{width:auto;padding:8px 15px;font-size:12px}
+.btn-row{display:flex;gap:10px}
+.btn-row .btn{flex:1}
+.vgap{display:flex;flex-direction:column;gap:10px}
+.errmsg{background:#fff0f0;border:1.5px solid #fcc;border-radius:8px;padding:11px 15px;color:#c00;font-size:13px;margin-bottom:14px}
+.okmsg{background:#f0f8f0;border:1.5px solid #bdb;border-radius:8px;padding:11px 15px;color:#262;font-size:13px;margin-bottom:14px}
+.opts{display:flex;flex-direction:column;gap:7px;max-height:420px;overflow-y:auto;padding-right:4px;margin-bottom:18px}
+.opt{background:#fafafa;border:1.5px solid #e0e0e0;border-radius:10px;padding:11px 15px;cursor:pointer;text-align:left;color:#111;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:300;display:flex;align-items:center;gap:11px;transition:all .15s;width:100%}
+.opt:hover{border-color:#999}
+.opt.sel{border-color:#111;background:#111;color:#fff}
+.opt.dim{opacity:.35;cursor:not-allowed;pointer-events:none}
+.chk{width:20px;height:20px;border-radius:50%;border:1.5px solid #ccc;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.opt.sel .chk{background:#fff;border-color:#fff;color:#111}
+.vctr{text-align:center;margin-bottom:18px}
+.vctr .big{font-family:'Syne',sans-serif;font-size:30px;font-weight:800;display:block}
+.vctr .sm{font-size:13px;color:#888}
+.rlist{display:flex;flex-direction:column;gap:9px;margin-bottom:22px}
+.rrow{display:flex;align-items:center;gap:13px}
+.rnk{font-family:'Syne',sans-serif;font-size:11px;font-weight:800;color:#aaa;width:26px;flex-shrink:0}
+.rbw{flex:1}
+.rlbl{font-size:13px;margin-bottom:4px;display:flex;justify-content:space-between;gap:8px}
+.rlbl span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rvts{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;flex-shrink:0}
+.rbar{height:6px;background:#eee;border-radius:3px;overflow:hidden}
+.rfill{height:100%;background:#111;border-radius:3px;transition:width .4s}
+.rfill.elim{background:#ddd}
+.cut{border:none;border-top:1px dashed #ddd;margin:8px 0}
+.cutlbl{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#aaa;text-align:center;padding:2px 0 6px}
+.stats{display:flex;gap:12px;margin-bottom:22px;flex-wrap:wrap}
+.stat{background:#f7f7f7;border:1.5px solid #e0e0e0;border-radius:10px;padding:12px;flex:1;min-width:70px;text-align:center}
+.stat .n{font-family:'Syne',sans-serif;font-size:26px;font-weight:800}
+.stat .l{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#999;margin-top:2px}
+.tabs{display:flex;gap:3px;background:#f0f0f0;border-radius:10px;padding:3px;margin-bottom:20px}
+.tabBtn{flex:1;padding:8px;border:none;background:transparent;border-radius:7px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;color:#888;transition:all .15s}
+.tabBtn.on{background:#fff;color:#111;font-weight:500;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.chip{background:#f0f0f0;border:1.5px solid #ccc;border-radius:20px;padding:4px 12px;font-size:12px;color:#444}
+.wnm{font-family:'Syne',sans-serif;font-size:clamp(22px,4vw,34px);font-weight:800;margin:10px 0 6px;word-break:break-word}
+.rbadges{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:22px}
+.rbadge{font-size:10px;padding:4px 10px;border-radius:12px;text-transform:uppercase;letter-spacing:.06em}
+.loading{display:flex;align-items:center;justify-content:center;height:100vh;color:#aaa;font-size:14px}
+.picks{background:#f7f7f7;border:1.5px solid #e0e0e0;border-radius:10px;padding:15px;margin-bottom:22px}
+.picks .plbl{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#aaa;margin-bottom:9px}
+.picks .pitem{font-size:14px;margin-bottom:5px}
+.round-info{background:#f7f7f7;border:1.5px solid #e0e0e0;border-radius:10px;padding:12px 15px;margin-bottom:18px;font-size:13px;color:#555;line-height:1.9}
+.sep{border:none;border-top:1px solid #eee;margin:18px 0}
+@media(max-width:580px){.header{padding:15px 20px}.card{padding:24px 18px}}
+</style>
+</head>
+<body>
+<div id="root"><div class="loading">Laden...</div></div>
+<script>
+var VPROUND = [5, 3, 1, 1]; // Stimmen pro Runde
+
+// ── State ─────────────────────────────────────────────────────────────────────
+var S = {
+  session: null, votes: {}, view: 'home', tab: 'results',
+  err: '', msg: '', adminMsg: '',
+  voterName: '', selected: [],
+  pinInput: '',
+  setupTitle: 'Westend vernetzt Aktionsreihe',
+  setupOptions: '', setupPin: '',
+  loading: true, advancing: false
+};
+
+function setState(patch) { Object.assign(S, patch); render(); }
+
+// ── Firebase ──────────────────────────────────────────────────────────────────
+var sRef = db.ref('westend/session');
+function vRef(r) { return db.ref('westend/votes/r' + r); }
+
+function loadAll() {
+  setState({ loading: true });
+  sRef.once('value').then(function(sn) {
+    var s = sn.val();
+    if (s) {
+      vRef(s.currentRound).once('value').then(function(vn) {
+        setState({ session: s, votes: vn.val() || {}, loading: false });
+      });
+    } else {
+      setState({ session: null, votes: {}, loading: false });
+    }
+  }).catch(function(e) {
+    setState({ loading: false, msg: 'Ladefehler: ' + e.message });
+  });
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function maxVotes() {
+  return S.session ? (VPROUND[S.session.currentRound - 1] || 1) : 1;
+}
+
+function voteCounts() {
+  if (!S.session) return [];
+  var rd = S.session.rounds[S.session.currentRound - 1];
+  var c = {};
+  (rd.options || []).forEach(function(o) { c[o] = 0; });
+  Object.values(S.votes).forEach(function(picks) {
+    picks.forEach(function(o) { c[o] = (c[o] || 0) + 1; });
+  });
+  return Object.entries(c).sort(function(a, b) { return b[1] - a[1]; });
+}
+
+// ── Actions ───────────────────────────────────────────────────────────────────
+function doCreate() {
+  var opts = S.setupOptions.split('\n').map(function(x){return x.trim();}).filter(Boolean);
+  if (!S.setupTitle.trim()) return setState({ err: 'Bitte Titel eingeben.' });
+  if (opts.length < 10)    return setState({ err: 'Mind. 10 Optionen eingeben.' });
+  if (!S.setupPin || S.setupPin.length < 4) return setState({ err: 'PIN mind. 4 Zeichen.' });
+  var s = {
+    title: S.setupTitle.trim(), adminPin: S.setupPin,
+    currentRound: 1, status: 'voting',
+    rounds: [
+      { num:1, options:opts,  status:'active',  advanceTo:10, maxVotes:5, label:'Runde 1 – Alle '+opts.length+' Optionen (5 Stimmen)' },
+      { num:2, options:[],    status:'pending', advanceTo:5,  maxVotes:3, label:'Runde 2 – Top 10 (3 Stimmen)' },
+      { num:3, options:[], status:'pending', advanceTo:2, maxVotes:1, label:'Runde 3 – Top 5 (1 Stimme)' },
+      { num:4, options:[], status:'pending', advanceTo:1, maxVotes:1, label:'Finale – Top 2 (1 Stimme)' }
+    ]
+  };
+  sRef.set(s).then(function() { setState({ session: s, view: 'admin', err: '' }); });
+}
+
+function doAdminLogin() {
+  if (S.session && S.pinInput === S.session.adminPin) setState({ view: 'admin', err: '' });
+  else setState({ err: 'Falsche PIN.' });
+}
+
+function goBallot() {
+  var name = S.voterName.trim();
+  if (!name) return setState({ err: 'Bitte Namen eingeben.' });
+  if (S.votes[name]) return setState({ err: '"' + name + '" hat bereits abgestimmt.' });
+  setState({ selected: [], view: 'ballot', err: '' });
+}
+
+function toggleOpt(o) {
+  var sel = S.selected.slice();
+  var idx = sel.indexOf(o);
+  if (idx >= 0) { sel.splice(idx, 1); }
+  else if (sel.length < maxVotes()) { sel.push(o); }
+  setState({ selected: sel });
+}
+
+function doVote() {
+  var mv = maxVotes();
+  var name = S.voterName.trim();
+  if (!name) return setState({ err: 'Bitte Namen eingeben.' });
+  if (S.selected.length !== mv) return setState({ err: 'Bitte genau ' + mv + ' Option' + (mv > 1 ? 'en' : '') + ' auswaehlen.' });
+  var nv = Object.assign({}, S.votes);
+  nv[name] = S.selected.slice();
+  vRef(S.session.currentRound).set(nv).then(function() {
+    setState({ votes: nv, view: 'done', err: '' });
+  });
+}
+
+function doAdvance() {
+  if (S.advancing) return;
+  setState({ advancing: true, adminMsg: 'Wird weitergeleitet...' });
+  var oldRound = S.session.currentRound;
+  var rd = S.session.rounds[oldRound - 1];
+  var top = voteCounts().slice(0, rd.advanceTo).map(function(x) { return x[0]; });
+  var last = oldRound === S.session.rounds.length;
+  var newRounds = S.session.rounds.map(function(r, i) {
+    if (i === oldRound - 1) return Object.assign({}, r, { status: 'closed' });
+    if (i === oldRound)     return Object.assign({}, r, { options: top, status: 'active' });
+    return r;
+  });
+  var ns = {
+    title: S.session.title, adminPin: S.session.adminPin,
+    currentRound: last ? oldRound : oldRound + 1,
+    status: last ? 'complete' : 'voting',
+    rounds: newRounds
+  };
+  if (last) ns.winner = top[0];
+  sRef.set(ns).then(function() {
+    if (last) {
+      setState({ session: ns, advancing: false, adminMsg: '' });
+    } else {
+      vRef(oldRound + 1).once('value').then(function(sn) {
+        setState({ session: ns, votes: sn.val() || {}, advancing: false,
+                   adminMsg: 'Runde ' + (oldRound + 1) + ' gestartet!' });
+        setTimeout(function() { setState({ adminMsg: '' }); }, 3000);
+      });
+    }
+  }).catch(function(e) {
+    setState({ advancing: false, adminMsg: 'Fehler: ' + e.message });
+  });
+}
+
+function doReset() {
+  if (!confirm('Sitzung wirklich komplett zuruecksetzen?')) return;
+  Promise.all([sRef.remove(), vRef(1).remove(), vRef(2).remove(), vRef(3).remove(), vRef(4).remove()])
+    .then(function() { setState({ session: null, votes: {}, view: 'home', msg: 'Zurueckgesetzt.' }); });
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function render() {
+  var root = document.getElementById('root');
+  if (S.loading) { root.innerHTML = '<div class="loading">Laden...</div>'; return; }
+  var html = buildHeader() + buildView();
+  root.innerHTML = html;
+  attachHandlers();
+}
+
+function buildHeader() {
+  var s = S.session;
+  var label = '';
+  if (s) {
+    var cr = s.rounds[s.currentRound - 1];
+    label = s.status === 'complete' ? 'Abgeschlossen' : (cr ? cr.label : '');
+    var active = cr && cr.status === 'active' && s.status !== 'complete';
+    label = '<span class="badge' + (active ? ' active' : '') + '">' + esc(label) + '</span>';
+  }
+  return '<div class="header"><div class="logo">Westend vernetzt – Abstimmung</div>' + label + '</div>';
+}
+
+function buildView() {
+  var s = S.session, v = S.view;
+  if (s && s.status === 'complete' && v !== 'admin') return buildWinner();
+  if (v === 'setup')       return buildSetup();
+  if (v === 'admin-login') return buildAdminLogin();
+  if (v === 'admin')       return buildAdmin();
+  if (v === 'vote-name')   return buildVoteName();
+  if (v === 'ballot')      return buildBallot();
+  if (v === 'done')        return buildDone();
+  return buildHome();
+}
+
+function buildHome() {
+  var s = S.session;
+  var vc = Object.keys(S.votes).length;
+  var info = s
+    ? '<p class="sub">' + esc(s.title) + '<br><span style="font-size:13px">' +
+      esc((s.rounds[s.currentRound-1]||{}).label || '') + ' – ' + vc + ' Stimme' + (vc !== 1 ? 'n' : '') + ' abgegeben</span></p>'
+    : '<p class="sub">Noch keine aktive Sitzung. Erstelle eine, um zu beginnen.</p>';
+  var btns = s
+    ? '<button class="btn btn-p" id="b-vote">Jetzt abstimmen</button>' +
+      '<button class="btn btn-g" id="b-admin-login">Admin-Bereich</button>' +
+      '<button class="btn btn-g" id="b-refresh">Aktualisieren</button>'
+    : '<button class="btn btn-p" id="b-setup">Neue Abstimmung erstellen</button>' +
+      '<button class="btn btn-g" id="b-refresh">Aktualisieren</button>';
+  return '<div class="center"><div class="card" style="text-align:center">' +
+    '<h1>Westend vernetzt<br>Aktionsreihe</h1>' +
+    '<p class="proj-sub">Es wird in drei Runden abgestimmt fuer den Titel und ggf. Slogan.</p>' +
+    info +
+    (S.msg ? '<div class="okmsg">' + esc(S.msg) + '</div>' : '') +
+    '<div class="vgap">' + btns + '</div></div></div>';
+}
+
+function buildSetup() {
+  var oc = S.setupOptions.split('\n').map(function(x){return x.trim();}).filter(Boolean).length;
+  return '<div class="center"><div class="card card-wide">' +
+    '<h2>Abstimmung erstellen</h2>' +
+    '<div class="round-info"><strong>Rundenstruktur:</strong><br>' +
+    'Runde 1: Alle Optionen – 5 Stimmen pro Person, Top 10 kommen weiter<br>' +
+    'Runde 2: Top 10 – 3 Stimmen pro Person, Top 5 kommen weiter<br>' +
+    'Runde 3: Top 5 – 1 Stimme pro Person, Top 2 kommen weiter<br>Finale: Top 2 – 1 Stimme pro Person, Gewinner bestimmt</div>' +
+    (S.err ? '<div class="errmsg">' + esc(S.err) + '</div>' : '') +
+    '<label>Titel</label>' +
+    '<input type="text" id="setup-title" value="' + esc(S.setupTitle) + '" placeholder="Westend vernetzt Aktionsreihe">' +
+    '<label>Optionen – eine pro Zeile (' + oc + ' eingegeben, mind. 10)</label>' +
+    '<textarea id="setup-opts" placeholder="Option A&#10;Option B&#10;...">' + esc(S.setupOptions) + '</textarea>' +
+    '<label>Admin-PIN (mind. 4 Zeichen)</label>' +
+    '<input type="password" id="setup-pin" value="' + esc(S.setupPin) + '" placeholder="PIN festlegen">' +
+    '<div class="btn-row">' +
+    '<button class="btn btn-g" id="b-back">Zurueck</button>' +
+    '<button class="btn btn-p" id="b-create">Abstimmung starten</button>' +
+    '</div></div></div>';
+}
+
+function buildAdminLogin() {
+  return '<div class="center"><div class="card">' +
+    '<h2>Admin-Login</h2>' +
+    (S.err ? '<div class="errmsg">' + esc(S.err) + '</div>' : '') +
+    '<label>Admin-PIN</label>' +
+    '<input type="password" id="admin-pin" placeholder="PIN eingeben" autocomplete="off">' +
+    '<div class="btn-row">' +
+    '<button class="btn btn-g" id="b-back">Zurueck</button>' +
+    '<button class="btn btn-p" id="b-do-login">Entsperren</button>' +
+    '</div></div></div>';
+}
+
+function buildAdmin() {
+  var s = S.session;
+  if (!s) return buildHome();
+  var counts  = voteCounts();
+  var maxV    = counts.length && counts[0][1] > 0 ? counts[0][1] : 1;
+  var cr      = s.rounds[s.currentRound - 1];
+  var advTo   = cr ? cr.advanceTo : 0;
+  var total   = Object.keys(S.votes).length;
+  var isLast  = s.currentRound === s.rounds.length;
+  var isDone  = s.status === 'complete';
+
+  var badges = s.rounds.map(function(r) {
+    var act = r.num === s.currentRound && !isDone;
+    var style = 'background:' + (act ? '#111' : '#f0f0f0') + ';border:1.5px solid ' +
+                (act ? '#111' : '#ddd') + ';color:' + (act ? '#fff' : r.status === 'closed' ? '#999' : '#bbb');
+    return '<span class="rbadge" style="' + style + '">' +
+           (r.status === 'closed' ? '✓ ' : '') + esc(r.label) + '</span>';
+  }).join('');
+
+  if (isDone) {
+    return '<div class="center"><div class="card card-wide">' +
+      '<h2 style="margin-bottom:10px">Ergebnisse</h2>' +
+      '<div class="rbadges">' + badges + '</div>' +
+      '<div style="text-align:center;padding:20px 0">' +
+      '<div style="font-size:48px;margin-bottom:12px">🏆</div>' +
+      '<div class="wnm">' + esc(s.winner) + '</div>' +
+      '<p style="color:#666;margin-bottom:22px">Gewinner von <strong>' + esc(s.title) + '</strong></p>' +
+      '<button class="btn btn-d btn-sm" id="b-reset">Sitzung zuruecksetzen</button>' +
+      '</div><hr class="sep">' +
+      '<button class="btn btn-g btn-sm" id="b-back">Zurueck zur Startseite</button>' +
+      '</div></div>';
+  }
+
+  // Results list
+  var rows = '';
+  if (counts.length === 0) {
+    rows = '<p style="color:#aaa;font-size:14px;text-align:center;padding:20px 0">Noch keine Stimmen abgegeben.</p>';
+  } else {
+    counts.forEach(function(item, i) {
+      var opt = item[0], n = item[1], adv = i < advTo;
+      if (i === advTo) {
+        rows += '<hr class="cut"><div class="cutlbl">── Schnittlinie: Top ' + advTo + ' kommen weiter ──</div><hr class="cut">';
+      }
+      var pct = Math.round((n / maxV) * 100);
+      rows += '<div class="rrow">' +
+        '<div class="rnk">#' + (i+1) + '</div>' +
+        '<div class="rbw">' +
+        '<div class="rlbl"><span style="opacity:' + (adv ? '1' : '0.4') + '">' + esc(opt) + '</span>' +
+        '<span class="rvts">' + n + ' S</span></div>' +
+        '<div class="rbar"><div class="rfill' + (adv ? '' : ' elim') + '" style="width:' + pct + '%"></div></div>' +
+        '</div></div>';
+    });
+  }
+
+  // Voters
+  var voterKeys = Object.keys(S.votes);
+  var chips = voterKeys.length === 0
+    ? '<p style="color:#aaa;font-size:14px">Noch keine Stimmen.</p>'
+    : voterKeys.map(function(n) { return '<span class="chip">✓ ' + esc(n) + '</span>'; }).join('');
+
+  var advLabel = isLast ? 'Gewinner bestimmen' : 'Top ' + advTo + ' weiterleiten → Runde ' + (s.currentRound + 1);
+
+  return '<div class="center"><div class="card card-wide">' +
+    '<h2 style="margin-bottom:10px">Admin – ' + esc(s.title) + '</h2>' +
+    '<div class="rbadges">' + badges + '</div>' +
+    (S.adminMsg ? '<div class="okmsg">' + esc(S.adminMsg) + '</div>' : '') +
+    '<div class="stats">' +
+    '<div class="stat"><div class="n">' + total + '</div><div class="l">Abgestimmt</div></div>' +
+    '<div class="stat"><div class="n">' + (cr && cr.options ? cr.options.length : 0) + '</div><div class="l">Optionen</div></div>' +
+    '<div class="stat"><div class="n">' + advTo + '</div><div class="l">Kommen weiter</div></div>' +
+    '<div class="stat"><div class="n">' + (cr ? cr.maxVotes : '-') + '</div><div class="l">Stimmen/Person</div></div>' +
+    '</div>' +
+    '<div class="tabs">' +
+    '<button class="tabBtn' + (S.tab === 'results' ? ' on' : '') + '" id="tab-results">Live-Ergebnisse</button>' +
+    '<button class="tabBtn' + (S.tab === 'voters'  ? ' on' : '') + '" id="tab-voters">Abstimmende (' + total + ')</button>' +
+    '</div>' +
+    (S.tab === 'results'
+      ? '<div class="rlist">' + rows + '</div>' +
+        '<div class="btn-row">' +
+        '<button class="btn btn-g" id="b-refresh">Aktualisieren</button>' +
+        '<button class="btn btn-p" id="b-advance"' + (total === 0 || S.advancing ? ' disabled' : '') + '>' + esc(advLabel) + '</button>' +
+        '</div>'
+      : '<div class="chips">' + chips + '</div>' +
+        '<button class="btn btn-d btn-sm" id="b-reset">Sitzung zuruecksetzen</button>'
+    ) +
+    '<hr class="sep"><button class="btn btn-g btn-sm" id="b-back">Zurueck zur Startseite</button>' +
+    '</div></div>';
+}
+
+function buildVoteName() {
+  var s = S.session;
+  var cr = s.rounds[s.currentRound - 1];
+  return '<div class="center"><div class="card">' +
+    '<h2>Wer bist du?</h2>' +
+    '<p class="sub">' + esc(s.title) + '<br><span style="font-size:13px">' + esc(cr ? cr.label : '') + '</span></p>' +
+    (S.err ? '<div class="errmsg">' + esc(S.err) + '</div>' : '') +
+    '<label>Dein Name</label>' +
+    '<input type="text" id="voter-name" value="' + esc(S.voterName) + '" placeholder="Namen eingeben">' +
+    '<div class="btn-row">' +
+    '<button class="btn btn-g" id="b-back">Zurueck</button>' +
+    '<button class="btn btn-p" id="b-go-ballot">Weiter</button>' +
+    '</div></div></div>';
+}
+
+function buildBallot() {
+  var s = S.session;
+  var cr = s.rounds[s.currentRound - 1];
+  var opts = cr ? cr.options : [];
+  var mv = maxVotes();
+  var rem = mv - S.selected.length;
+
+  var optHtml = opts.map(function(o) {
+    var isSel = S.selected.indexOf(o) >= 0;
+    var isDim = !isSel && S.selected.length >= mv;
+    return '<button class="opt' + (isSel ? ' sel' : '') + (isDim ? ' dim' : '') + '" data-opt="' + esc(o) + '">' +
+      '<div class="chk">' + (isSel ? '✓' : '') + '</div>' + esc(o) +
+      '</button>';
+  }).join('');
+
+  return '<div class="center"><div class="card card-wide">' +
+    '<h2>Jetzt abstimmen</h2>' +
+    '<p class="sub">' + esc(s.title) + ' – ' + esc(cr ? cr.label : '') +
+    '<br>Abstimmung als <strong>' + esc(S.voterName) + '</strong></p>' +
+    (S.err ? '<div class="errmsg">' + esc(S.err) + '</div>' : '') +
+    '<div class="vctr"><span class="big">' + S.selected.length + '</span>' +
+    '<span class="sm">von ' + mv + ' Stimmen – noch ' + rem + ' uebrig</span></div>' +
+    '<div class="opts" id="opts-list">' + optHtml + '</div>' +
+    '<div class="btn-row">' +
+    '<button class="btn btn-g" id="b-back">Zurueck</button>' +
+    '<button class="btn btn-p" id="b-do-vote"' + (S.selected.length !== mv ? ' disabled' : '') + '>' +
+    mv + ' Stimme' + (mv > 1 ? 'n' : '') + ' abgeben</button>' +
+    '</div></div></div>';
+}
+
+function buildDone() {
+  var mv = S.session ? VPROUND[S.session.currentRound - 1] : 1;
+  var picks = S.selected.map(function(x) {
+    return '<div class="pitem">✓ ' + esc(x) + '</div>';
+  }).join('');
+  return '<div class="center"><div class="card" style="text-align:center">' +
+    '<h2>Stimme' + (mv > 1 ? 'n' : '') + ' abgegeben!</h2>' +
+    '<p style="color:#666;margin:12px 0 18px">Danke, <strong>' + esc(S.voterName) + '</strong>.</p>' +
+    '<div class="picks"><div class="plbl">Deine Auswahl</div>' + picks + '</div>' +
+    '<button class="btn btn-g" id="b-home">Zurueck zur Startseite</button>' +
+    '</div></div>';
+}
+
+function buildWinner() {
+  var s = S.session;
+  return '<div class="center"><div class="card" style="text-align:center">' +
+    '<div style="font-size:56px;margin-bottom:12px">🏆</div>' +
+    '<h1 style="margin-bottom:8px">Gewinner!</h1>' +
+    '<div class="wnm">' + esc(s.winner) + '</div>' +
+    '<p style="color:#666;margin:8px 0 22px">' + esc(s.title) + '</p>' +
+    '<button class="btn btn-g" id="b-admin-login">Admin-Bereich</button>' +
+    '</div></div>';
+}
+
+// ── Event handlers ────────────────────────────────────────────────────────────
+function attachHandlers() {
+  function on(id, fn) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('click', fn);
+  }
+  function onInput(id, fn) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('input', fn);
+  }
+
+  on('b-vote',       function() { setState({ view: 'vote-name', selected: [], err: '' }); });
+  on('b-admin-login',function() { setState({ view: 'admin-login', err: '', pinInput: '' }); });
+  on('b-setup',      function() { setState({ view: 'setup', err: '' }); });
+  on('b-refresh',    function() { loadAll(); });
+  on('b-back',       function() { setState({ view: 'home', err: '' }); });
+  on('b-home',       function() { setState({ view: 'home', voterName: '', selected: [] }); });
+  on('b-create',     function() {
+    S.setupTitle   = (document.getElementById('setup-title') || {}).value || S.setupTitle;
+    S.setupOptions = (document.getElementById('setup-opts')  || {}).value || S.setupOptions;
+    S.setupPin     = (document.getElementById('setup-pin')   || {}).value || S.setupPin;
+    doCreate();
+  });
+  on('b-do-login',   function() {
+    S.pinInput = (document.getElementById('admin-pin') || {}).value || '';
+    doAdminLogin();
+  });
+  on('b-go-ballot',  function() {
+    S.voterName = (document.getElementById('voter-name') || {}).value || '';
+    goBallot();
+  });
+  on('b-do-vote',    doVote);
+  on('b-advance',    doAdvance);
+  on('b-reset',      doReset);
+  on('tab-results',  function() { setState({ tab: 'results' }); });
+  on('tab-voters',   function() { setState({ tab: 'voters' }); });
+
+  // Enter key shortcuts
+  var adminPin = document.getElementById('admin-pin');
+  if (adminPin) adminPin.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { S.pinInput = adminPin.value; doAdminLogin(); }
+  });
+  var voterName = document.getElementById('voter-name');
+  if (voterName) voterName.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { S.voterName = voterName.value; goBallot(); }
+  });
+
+  // Ballot option buttons
+  var optsList = document.getElementById('opts-list');
+  if (optsList) {
+    optsList.addEventListener('click', function(e) {
+      var btn = e.target.closest('[data-opt]');
+      if (btn && !btn.classList.contains('dim')) {
+        toggleOpt(btn.getAttribute('data-opt'));
+      }
+    });
+  }
+
+  // Live option count in setup
+  onInput('setup-opts', function(e) {
+    S.setupOptions = e.target.value;
+    // just update count label without full re-render
+    var oc = S.setupOptions.split('\n').map(function(x){return x.trim();}).filter(Boolean).length;
+    var labels = document.querySelectorAll('label');
+    labels.forEach(function(l) {
+      if (l.textContent.indexOf('eingegeben') > -1) {
+        l.textContent = 'Optionen – eine pro Zeile (' + oc + ' eingegeben, mind. 10)';
+      }
+    });
+  });
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+loadAll();
+</script>
+</body>
+</html>
